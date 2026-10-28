@@ -1,0 +1,17 @@
+# Build directories
+build_linux/
+build_win/
+
+# Compiled executables
+game16
+game16.exe
+game16-linux-x86_64
+game16-linux-aarch64
+game16-windows-x86_64.exe
+
+# Object files
+*.o
+*.obj
+
+# Temporary and test files
+/tmp/

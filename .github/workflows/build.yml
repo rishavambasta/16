@@ -1,0 +1,102 @@
+name: Build and Test Game of 16
+
+on:
+  push:
+    branches: [ "**" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+jobs:
+  build-linux-x86_64:
+    name: Build Linux x86_64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc make libncurses-dev
+
+      - name: Compile and Test
+        run: |
+          make clean
+          make
+          ./game16 --test
+          cp game16 game16-linux-x86_64
+
+      - name: Upload Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: game16-linux-x86_64
+          path: game16-linux-x86_64
+
+  build-linux-aarch64:
+    name: Build Linux aarch64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build and Test in aarch64 Container
+        run: |
+          docker run --rm --platform linux/arm64 -v "${{ github.workspace }}:/src" -w /src ubuntu:22.04 bash -c "
+            apt-get update -q &&
+            apt-get install -q -y gcc make libncurses-dev &&
+            make clean &&
+            make &&
+            ./game16 --test &&
+            cp game16 game16-linux-aarch64
+          "
+
+      - name: Upload Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: game16-linux-aarch64
+          path: game16-linux-aarch64
+
+  build-windows-x86_64:
+    name: Build Windows 64-bit
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile and Test on Windows
+        shell: bash
+        run: |
+          gcc -Wall -Wextra -O3 -std=c11 main.c board.c solver.c ui.c -o game16-windows-x86_64.exe
+          ./game16-windows-x86_64.exe --test
+
+      - name: Upload Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: game16-windows-x86_64.exe
+          path: game16-windows-x86_64.exe
+
+  release:
+    name: Publish GitHub Release
+    needs: [build-linux-x86_64, build-linux-aarch64, build-windows-x86_64]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/game16-linux-x86_64/game16-linux-x86_64
+            artifacts/game16-linux-aarch64/game16-linux-aarch64
+            artifacts/game16-windows-x86_64.exe/game16-windows-x86_64.exe
