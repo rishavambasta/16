@@ -308,7 +308,7 @@ static void render_clean(const Board *b, int arrow_mode, const char *cmd_buf,
         attroff(COLOR_PAIR(PAIR_STATUS_WIN) | A_BOLD);
     } else if (in_god_mode) {
         attron(COLOR_PAIR(PAIR_STATUS_GOD) | A_BOLD);
-        mvprintw(start_y, start_x, "● God Mode: step %d / %d (1/sec)  [Esc to stop]",
+        mvprintw(start_y, start_x, "● God Mode: step %d / %d [Esc to stop]",
                  god_step, god_total);
         attroff(COLOR_PAIR(PAIR_STATUS_GOD) | A_BOLD);
     } else {
@@ -384,7 +384,7 @@ void ui_run_game(int initial_scramble_moves, bool start_in_god_mode) {
         /* Handle God Mode tick: exactly 1 move per 1000ms */
         if (in_god_mode) {
             long long current_ms = get_time_ms();
-            if (current_ms - last_god_move_time >= 1000) {
+            if (current_ms - last_god_move_time >= 500) {
                 if (god_step < god_move_count) {
                     int blank_dir = god_moves[god_step];
                     board_move_blank(&board, blank_dir);

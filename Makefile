@@ -4,7 +4,7 @@ ifeq ($(OS),Windows_NT)
     TARGET = game16.exe
     BUILD_DIR = build_win
     LDFLAGS ?=
-    CFLAGS ?= -Wall -Wextra -O3 -std=c11
+    CFLAGS ?= -Wall -Wextra -O3 -std=c11 -static
     RM = del /Q /F
 else
     ifneq ($(findstring mingw,$(CC)),)
